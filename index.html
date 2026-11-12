@@ -44,7 +44,7 @@
   }
   .right{display:grid; grid-template-rows:auto minmax(0,1fr) minmax(0,15.5vh); gap:2vh; min-width:0; min-height:0}
   body.break .right{grid-template-rows:auto minmax(0,1fr)}
-  .top{display:flex; align-items:flex-end; justify-content:space-between; gap:3vw; min-width:0}
+  .top{display:grid; grid-template-columns:auto minmax(0,1fr); align-items:end; gap:3vw; min-width:0}
   .main{display:grid; grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr); gap:1.2vw; min-height:0}
   body.nogroups .main{grid-template-columns:minmax(0,1fr)}
   body.nogroups #boardCard{display:none}
@@ -52,7 +52,7 @@
   body.break .main, body.break .bottom{display:none}
 
   /* ---------- hourglass column ---------- */
-  .hgCol{--hgH:min(58vh,26vw); width:calc(var(--hgH) * 200 / 340); display:flex; flex-direction:column; align-items:stretch; gap:2.6vh; min-height:0}
+  .hgCol{--hgH:min(58vh,26vw); width:calc(var(--hgH) * 200 / 340); display:flex; flex-direction:column; align-items:stretch; gap:2vh; min-height:0}
   .wall{text-align:center; line-height:1}
   .wall-time{display:block; font-family:var(--display); font-weight:600; font-size:min(3vw,5.2vh); color:var(--soft); font-variant-numeric:tabular-nums; letter-spacing:.01em}
   .wall-cls{display:inline-block; margin-top:.8vh; font-size:min(1vw,1.8vh); font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:#1d1305; background:var(--sand); padding:.35em .8em; border-radius:99px}
@@ -71,7 +71,7 @@
   .wall-plan:hover{background:var(--chip-hover)}
   body.idle .wall-plan{opacity:0; pointer-events:none}
   body.break .wall-plan, body.mentor .wall-plan, body.mentor .wall-day{display:none}
-  .hg{height:var(--hgH); aspect-ratio:200/340; margin-top:auto; transform-origin:50% 50%}
+  .hg{flex:1 1 0; min-height:0; width:100%; transform-origin:50% 50%}
   .hg-inner{width:100%; height:100%; transform-origin:50% 50%}
   .hg-inner.wobble{animation:wobble .6s ease}
   .hg-inner.spin{animation:spin 1.1s cubic-bezier(.5,0,.3,1)}
@@ -87,6 +87,7 @@
   body.break .hgControls{grid-template-columns:1fr}
   body.break #resetBtn{display:none}
   .hgAdjust{grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr; gap:.7rem}
+  .hgControls{flex:none}
   .hgControls .hgAdjust button{height:clamp(2.1rem,4vh,2.7rem); font-size:clamp(.85rem,.9vw,1.05rem); font-weight:700; color:var(--soft); background:var(--chip); border:1px solid var(--line)}
   .hgControls .hgAdjust button:hover{background:var(--chip-hover); color:var(--fg)}
   body.idle .hgControls{opacity:0; pointer-events:none}
@@ -128,12 +129,19 @@
   @keyframes pulse{50%{opacity:.25}}
 
   /* ---------- status ---------- */
-  .status{position:relative; display:flex; flex-direction:column; align-items:flex-end; text-align:right; padding-bottom:.4vh; min-width:0}
+  .status{position:relative; display:flex; flex-direction:column; align-items:stretch; text-align:left; padding-bottom:.4vh; min-width:0; max-width:46vw; justify-self:end; width:100%}
+  .nowblk{margin-bottom:1.3vh; padding-bottom:1.2vh; border-bottom:1px solid var(--line); cursor:pointer; min-width:0}
+  .nowblk[hidden]{display:none}
+  .nb-kicker{font-size:min(1.05vw,1.9vh); font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--sand)}
+  .nb-title{margin-top:.4vh; font-family:var(--display); font-weight:700; font-size:min(2vw,3.7vh); line-height:1.1; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .countrow{display:flex; align-items:baseline; gap:1vw; min-width:0}
+  .countrow .label{margin-top:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .status .count{font-size:min(4.4vw,7.6vh)}
   .count{font-family:var(--display); font-weight:700; font-size:min(5.4vw,9.5vh); line-height:.9; font-variant-numeric:tabular-nums}
   .count small{font-size:.5em; color:var(--muted); font-weight:600; margin:0 .12em}
   body.done:not(.break) .count{color:var(--danger)}
   .label{color:var(--soft); font-weight:600; font-size:min(1.45vw,2.7vh); margin-top:.4vh}
-  .bar{display:flex; gap:6px; height:14px; width:min(21vw,340px); margin-top:1.2vh}
+  .bar{display:flex; gap:6px; height:14px; width:100%; margin-top:1.2vh}
   .bar i{flex:1; border-radius:4px; background:rgba(255,255,255,.18); transition:background .4s}
   .bar i.on{background:var(--teal)}
   .status.empty .count,.status.empty .label,.status.empty .bar{display:none}
@@ -142,13 +150,13 @@
   body.break .bar, body.break .bank{display:none}
   body.break.done .count{color:var(--teal); font-size:min(4vw,7vh)}
 
-  .bank{display:grid; grid-template-columns:auto auto auto; gap:.7vh .8vw; margin-top:1.8vh; align-items:center; justify-items:end}
+  .bank{display:grid; grid-template-columns:auto auto minmax(0,1fr); gap:.45vh 1vw; margin-top:1.3vh; align-items:center; justify-items:start}
   .bank.hidden{display:none}
   .bank-row{display:contents}
   .bank-lbl{font-size:min(1.25vw,2.3vh); font-weight:700; color:var(--soft); white-space:nowrap}
   .bank-lbl .ico{font-family:var(--emoji); margin-right:.35em}
   .bank-val{font-family:var(--display); font-weight:700; font-size:min(1.9vw,3.4vh); font-variant-numeric:tabular-nums; min-width:2.6em; text-align:right}
-  .bank-meter{width:min(7vw,110px); height:8px; border-radius:99px; background:rgba(255,255,255,.14); overflow:hidden; justify-self:stretch}
+  .bank-meter{width:100%; height:8px; border-radius:99px; background:rgba(255,255,255,.14); overflow:hidden; justify-self:stretch}
   .bank-meter span{display:block; height:100%; width:0; border-radius:99px; transition:width .9s cubic-bezier(.3,1.4,.5,1)}
   #bankBrk .bank-meter span{background:var(--teal)}
   #bankEarly .bank-meter span{background:var(--violet)}
@@ -455,7 +463,8 @@
     .hgControls{order:3; grid-template-columns:1fr; gap:.4rem; padding:0; margin-left:auto; width:34vw}
     .hgControls button{height:2.6rem; font-size:.95rem}
     .right{display:flex; flex-direction:column; gap:2vh}
-    .top{flex-direction:column; align-items:flex-start; gap:1.4vh}
+    .top{display:flex; flex-direction:column; align-items:flex-start; gap:1.4vh}
+    .status{max-width:none}
     .status{align-items:flex-start; text-align:left}
     .bank{justify-items:start}
     .pill{right:auto; left:0; top:auto; bottom:100%; margin:0 0 1vh}
@@ -684,8 +693,11 @@
       <div class="time" id="time" title="Click to type a new time, like 15, 7:30 or 1:15:00">5:00</div>
       <div class="status" id="status">
         <div class="pill" id="pill"></div>
-        <div class="count" id="count"></div>
-        <div class="label" id="countLabel"></div>
+        <div class="nowblk" id="nowBlk" hidden title="Open the plan to load another block">
+          <div class="nb-kicker" id="nbKicker"></div>
+          <div class="nb-title" id="nbTitle"></div>
+        </div>
+        <div class="countrow"><div class="count" id="count"></div><div class="label" id="countLabel"></div></div>
         <div class="bar" id="bar"></div>
         <div class="bank hidden" id="bank">
           <div class="bank-row" id="bankBrk"><span class="bank-lbl"><span class="ico">☕</span>Bonus break</span><span class="bank-val">+0:00</span><span class="bank-meter"><span></span></span></div>
@@ -1010,7 +1022,7 @@
     if (s){
       if (s.duration > 0) state.duration = s.duration;
       if (typeof s.sound === 'boolean') state.sound = s.sound;
-      if (s.plan && typeof s.plan.date === 'string' && Number.isInteger(s.plan.idx)) state.plan = { date: s.plan.date, idx: s.plan.idx, nextText: String(s.plan.nextText || '') };
+      if (s.plan && typeof s.plan.date === 'string' && Number.isInteger(s.plan.idx)) state.plan = { date: s.plan.date, idx: s.plan.idx, nextText: String(s.plan.nextText || ''), title: String(s.plan.title || '').slice(0, 160), am: Array.isArray(s.plan.am) ? s.plan.am : null, pm: Array.isArray(s.plan.pm) ? s.plan.pm : null };
       if (s.titles) state.titles = { ...DEFAULT_TITLES, ...s.titles };
       ['obj', 'early', 'next', 'back'].forEach(k => {
         if (s.lists && Array.isArray(s.lists[k])) state.lists[k] = s.lists[k].map(i => {
@@ -1874,6 +1886,7 @@
     $('gCount').textContent = C().count || 'Off';
     $('wallCls').textContent = state.cls + ' class';
     if (typeof renderMentor === 'function' && M.on) renderMentor();
+    if (typeof renderNow === 'function') renderNow();
   }
 
   /* ================= bonus bank + slot machine ================= */
@@ -2208,7 +2221,8 @@
     const nb = plan.blocks[i + 1];
     const nextText = nb ? (nb.kind === 'break' ? `Break until ${fmtHM(times(nb)[1])}` : `Next: ${cleanTitle(nb.title)}`) : '';
     state.lists.next = nextText ? [blankItem(nextText)] : [];
-    state.plan = { date: plan.date, idx: i, nextText };
+    state.plan = { date: plan.date, idx: i, nextText, title: cleanTitle(b.title), am: b.am || null, pm: b.pm || null };
+    renderNow();
     // inside the block's window, count down to its end; otherwise use the block's full length
     const ms = isToday && t >= start && t < end ? end - t : Math.max(60000, end - start);
     state.duration = Math.max(1000, Math.round(ms / 1000) * 1000);
@@ -2217,10 +2231,22 @@
     toast(`Loaded ${cleanTitle(b.title)}. Press Space to start.`, () => {
       const old = JSON.parse(snap);
       state.lists = old.lists; state.classes = old.classes; state.duration = old.duration; state.plan = old.plan;
-      remaining = state.duration; prevAllDone = true;
+      remaining = state.duration; prevAllDone = true; renderNow();
       save(); ['obj', 'early', 'next', 'back'].forEach(k => renderList(k)); updateProgress();
     }, 'Undo', 5000);
   }
+  // the block now on screen, shown beside the timer
+  function renderNow(){
+    const p = state.plan, box = $('nowBlk');
+    if (!p || !p.title || p.date !== isoDay() && !(plan && plan.date === p.date)){ box.hidden = true; return; }
+    const w = p[state.cls === 'PM' ? 'pm' : 'am'];
+    const [yy, mm, dd] = p.date.split('-').map(Number);
+    const day = p.date === isoDay() ? 'Now' : new Date(yy, mm - 1, dd).toLocaleDateString(undefined, { weekday: 'short' });
+    $('nbKicker').textContent = `${day}${w ? ` · ${fmtHM(w[0])}–${fmtHM(w[1])}` : ''}`;
+    $('nbTitle').textContent = p.title;
+    box.hidden = false;
+  }
+  $('nowBlk').addEventListener('click', () => { if (TEACHER) openPlan(); });
   // This teacher's AM/PM business names (teacher_settings, public read, never student names).
   // They only fill groups still showing a stock "Group N" name, so renamed groups are never overwritten.
   async function applyRosters(){
@@ -2262,7 +2288,7 @@
     $('dayNext').addEventListener('click', () => { showControls(); showPlanDay(shiftDay(plan ? plan.date : isoDay(), 1)); scheduleIdle(); });
     $('dayLbl').addEventListener('click', openPlan);
     $('planModal').addEventListener('click', e => { if (e.target === $('planModal')) closePlan(); });
-    fetchPlan().then(renderDay).catch(() => {}); // today, or the next planned day when today is empty
+    fetchPlan().then(() => { renderDay(); renderNow(); }).catch(() => {}); // today, or the next planned day when today is empty
     applyRosters();
   }
 
