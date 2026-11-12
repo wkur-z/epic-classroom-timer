@@ -65,6 +65,12 @@
   .wall-day .wd-lbl:hover, .wall-day .wd-arrow:hover{background:var(--chip-hover)}
   .wall-day .wd-arrow{font-size:1.5em; line-height:.8; transition:opacity .5s}
   body.idle .wall-day .wd-arrow{opacity:0; pointer-events:none}
+  .wall-plan{display:inline-flex; align-items:center; gap:.45em; margin-top:1.1vh; font:inherit; font-size:min(1vw,1.8vh); font-weight:800; color:var(--fg); background:var(--chip); border:1px solid var(--line); border-radius:99px; padding:.5em 1.1em; cursor:pointer; transition:background .15s, opacity .5s}
+  .wall-plan[hidden]{display:none}
+  .wall-plan svg{width:1.05em; height:1.05em; fill:var(--sand)}
+  .wall-plan:hover{background:var(--chip-hover)}
+  body.idle .wall-plan{opacity:0; pointer-events:none}
+  body.break .wall-plan, body.mentor .wall-plan, body.mentor .wall-day{display:none}
   .hg{height:var(--hgH); aspect-ratio:200/340; margin-top:auto; transform-origin:50% 50%}
   .hg-inner{width:100%; height:100%; transform-origin:50% 50%}
   .hg-inner.wobble{animation:wobble .6s ease}
@@ -80,6 +86,9 @@
   .hgControls{display:grid; grid-template-columns:1fr 1fr; gap:.7rem; padding:0 5%; transition:opacity .5s ease}
   body.break .hgControls{grid-template-columns:1fr}
   body.break #resetBtn{display:none}
+  .hgAdjust{grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr; gap:.7rem}
+  .hgControls .hgAdjust button{height:clamp(2.1rem,4vh,2.7rem); font-size:clamp(.85rem,.9vw,1.05rem); font-weight:700; color:var(--soft); background:var(--chip); border:1px solid var(--line)}
+  .hgControls .hgAdjust button:hover{background:var(--chip-hover); color:var(--fg)}
   body.idle .hgControls{opacity:0; pointer-events:none}
   .hgControls button{
     display:flex; align-items:center; justify-content:center; gap:.5em; min-width:0;
@@ -318,6 +327,13 @@
   .seg{display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden}
   .controls .seg button{border:0; border-radius:0; background:transparent; padding:.46rem .9rem}
   .controls .seg button.on{background:var(--sand); color:#1a1206}
+  .more{position:relative}
+  .caret{font-size:.75em; opacity:.7}
+  .more-menu{position:absolute; right:0; bottom:calc(100% + .5rem); z-index:12; display:flex; flex-direction:column; gap:.3rem; min-width:13rem; padding:.6rem; border-radius:14px; background:var(--panel); border:1px solid var(--line); box-shadow:0 20px 50px rgba(0,0,0,.55)}
+  .more-menu[hidden]{display:none}
+  .more-menu button{text-align:left; border-radius:10px !important; width:100%}
+  .more-sec{font-size:.68rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--sand); padding:.45rem .3rem .1rem}
+  .more-sec:first-child{padding-top:.1rem}
 
   .toast{
     position:fixed; left:50%; top:1.5rem; transform:translate(-50%,-10px); z-index:13;
@@ -589,6 +605,7 @@
   <div class="hgCol">
     <div class="wall"><span class="wall-time" id="wallTime"></span><span class="wall-cls" id="wallCls"></span>
       <div class="wall-day" id="wallDay" hidden><button class="wd-arrow" id="dayPrev" title="Previous day" aria-label="Previous day">‹</button><button class="wd-lbl" id="dayLbl" title="Open this day's plan (P)"></button><button class="wd-arrow" id="dayNext" title="Next day" aria-label="Next day">›</button></div>
+      <button class="wall-plan vhide" id="planBtn" hidden title="Load a block from this day's plan (P)"><svg viewBox="0 0 16 16"><path d="M3 2.5h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm.5 3v6.5h9V5.5zM5 7h3v1.3H5zm0 2.2h5v1.3H5z"/></svg>Today's plan</button>
     </div>
     <div class="hg" id="hg"><div class="hg-inner" id="hgInner">
       <svg id="hgSvg" viewBox="0 0 200 340" aria-hidden="true">
@@ -641,6 +658,10 @@
     <div class="hgControls">
       <button id="startBtn" title="Start or pause (Space)"></button>
       <button id="resetBtn" title="Stop and reset the timer (R)"><svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="2"/></svg><span>Stop</span></button>
+      <div class="hgAdjust">
+        <button id="minus" title="Subtract 1 minute (↓)">−1 min</button>
+        <button id="plus" title="Add 1 minute (↑)">+1 min</button>
+      </div>
     </div>
     <div class="sync" id="sync" hidden>
       <div class="sync-row"><i class="sync-dot"></i><span id="syncTxt">Connecting</span></div>
@@ -748,26 +769,19 @@
 </main>
 
 <div class="controls" id="controls">
-  <div class="group vhide">
-    <button id="minus" title="Subtract 1 minute (↓)">−1m</button>
-    <button id="plus" title="Add 1 minute (↑)">+1m</button>
-  </div>
-  <span class="sep"></span>
-  <div class="group vhide">
-    <button id="mentorBtn" class="vhide" title="Show mentor pairings for Round 1, Round 2 and Open house">Mentor day</button>
+  <div class="group vhide" title="Which class is in the room">
     <span class="lbl">Class</span>
     <span class="seg"><button id="clsAM">AM</button><button id="clsPM">PM</button></span>
   </div>
-  <span class="sep"></span>
   <div class="group vhide mhide" title="Number of groups. Set to Off for simple checkboxes.">
     <span class="lbl">Groups</span>
     <button id="gMinus" aria-label="Fewer groups">−</button>
     <span class="stepval" id="gCount">4</span>
     <button id="gPlus" aria-label="More groups">+</button>
   </div>
-  <span class="sep"></span>
+  <span class="sep vhide"></span>
   <div class="group vhide">
-    <span class="lbl">Back from break at</span>
+    <span class="lbl">Break, back at</span>
     <input id="breakInput" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 2:30" aria-label="Back from break at" title="Type a time like 2:30, then Enter (B jumps here)">
     <button type="button" id="breakBtn">Start break</button>
   </div>
@@ -775,14 +789,19 @@
   <div class="group">
     <button id="soundBtn" aria-label="Sound"></button>
     <button id="fsBtn" title="Full screen (F)">Full screen</button>
-  </div>
-  <span class="sep"></span>
-  <div class="group">
-    <button id="planBtn" class="vhide" hidden title="Load a block from today's class plan (P)">Today's plan</button>
-    <button id="syncBtn" title="Keep this timer in sync with other rooms through a link">Sync rooms</button>
-    <button id="newDayBtn" class="vhide" title="Clear all group check-offs and bonus banks for AM and PM, and reset the timer">New day</button>
-    <button id="demoBtn" class="shide" title="Run a narrated tour on sample data. Your real setup is untouched.">Demo</button>
-    <button id="settingsBtn" title="Bonus odds and prize settings"><svg viewBox="0 0 16 16"><path d="M9.4 1l.4 1.9c.4.1.8.3 1.1.6l1.8-.7 1.4 2.4-1.4 1.3c.1.4.1.9 0 1.3l1.4 1.3-1.4 2.4-1.8-.7c-.3.3-.7.5-1.1.6L9.4 15H6.6l-.4-1.9c-.4-.1-.8-.3-1.1-.6l-1.8.7-1.4-2.4 1.4-1.3c-.1-.4-.1-.9 0-1.3L1.9 6.9l1.4-2.4 1.8.7c.3-.3.7-.5 1.1-.6L6.6 1zM8 5.6a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8z"/></svg> Settings</button>
+    <div class="more">
+      <button id="moreBtn" aria-haspopup="true" aria-expanded="false" title="Mentor day, sync, new day, demo and settings">More <span class="caret">▾</span></button>
+      <div class="more-menu" id="moreMenu" hidden>
+        <div class="more-sec">Daily</div>
+        <button id="newDayBtn" class="vhide" title="Clear all group check-offs and bonus banks for AM and PM, and reset the timer">New day</button>
+        <div class="more-sec">Special days</div>
+        <button id="mentorBtn" class="vhide" title="Show mentor pairings for Round 1, Round 2 and Open house">Mentor day</button>
+        <button id="syncBtn" title="Keep this timer in sync with other rooms through a link">Sync rooms</button>
+        <div class="more-sec">Setup</div>
+        <button id="settingsBtn" title="Bonus odds and prize settings"><svg viewBox="0 0 16 16"><path d="M9.4 1l.4 1.9c.4.1.8.3 1.1.6l1.8-.7 1.4 2.4-1.4 1.3c.1.4.1.9 0 1.3l1.4 1.3-1.4 2.4-1.8-.7c-.3.3-.7.5-1.1.6L9.4 15H6.6l-.4-1.9c-.4-.1-.8-.3-1.1-.6l-1.8.7-1.4-2.4 1.4-1.3c-.1-.4-.1-.9 0-1.3L1.9 6.9l1.4-2.4 1.8.7c.3-.3.7-.5 1.1-.6L6.6 1zM8 5.6a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8z"/></svg> Settings</button>
+        <button id="demoBtn" class="shide" title="Run a narrated tour on sample data. Your real setup is untouched.">Demo</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2060,6 +2079,13 @@
   }
   $('moveBtn').addEventListener('click', promoteNext);
 
+  /* ================= More menu ================= */
+  function setMore(open){ $('moreMenu').hidden = !open; $('moreBtn').setAttribute('aria-expanded', String(open)); if (open) showControls(); }
+  $('moreBtn').addEventListener('click', e => { e.stopPropagation(); setMore($('moreMenu').hidden); });
+  // New day asks "Sure?" first, so the menu stays open for that second click
+  $('moreMenu').addEventListener('click', e => { const b = e.target.closest('button'); if (b && b.id !== 'newDayBtn') setMore(false); });
+  document.addEventListener('click', e => { if (!$('moreMenu').hidden && !e.target.closest('.more')) setMore(false); });
+
   /* ================= today's class plan ================= */
   // Plans live in the class_plans table (read only to the public), one row per teacher per day.
   // A screen picks its teacher once with ?teacher=name in the link; ?teacher=off forgets it.
@@ -2195,6 +2221,31 @@
       save(); ['obj', 'early', 'next', 'back'].forEach(k => renderList(k)); updateProgress();
     }, 'Undo', 5000);
   }
+  // This teacher's AM/PM business names (teacher_settings, public read, never student names).
+  // They only fill groups still showing a stock "Group N" name, so renamed groups are never overwritten.
+  async function applyRosters(){
+    let rows;
+    try{
+      const res = await fetch(`${SB_URL}/rest/v1/teacher_settings?teacher=eq.${encodeURIComponent(TEACHER)}&select=rosters`, { headers: { apikey: SB_KEY } });
+      if (!res.ok) return;
+      rows = await res.json();
+    }catch(e){ return; }
+    const ro = rows[0] && rows[0].rosters;
+    if (!ro || demo) return;
+    const stock = /^Group \d+$/;
+    let changed = false;
+    ['AM', 'PM'].forEach(cl => {
+      const names = (Array.isArray(ro[cl]) ? ro[cl] : []).map(n => String(n).trim().slice(0, 24)).filter(Boolean).slice(0, MAX_GROUPS);
+      if (!names.length) return;
+      const c = state.classes[cl];
+      const allStock = c.names.slice(0, Math.max(c.count, 1)).every(n => stock.test(n));
+      names.forEach((n, g) => { if (stock.test(c.names[g])){ c.names[g] = n; changed = true; } });
+      if (allStock && c.count !== names.length){ c.count = names.length; changed = true; }
+    });
+    if (!changed) return;
+    save(); syncClassUI(); renderList('obj');
+    if (typeof renderBoard === 'function') renderBoard();
+  }
   // "Make these the objectives" loads the next planned block when When time's up still holds the line the plan put there
   function planNextReady(){
     const p = state.plan;
@@ -2212,6 +2263,7 @@
     $('dayLbl').addEventListener('click', openPlan);
     $('planModal').addEventListener('click', e => { if (e.target === $('planModal')) closePlan(); });
     fetchPlan().then(renderDay).catch(() => {}); // today, or the next planned day when today is empty
+    applyRosters();
   }
 
   /* ================= settings ================= */
@@ -2480,6 +2532,7 @@
     if (!$('pairModal').hidden){ if (e.key === 'Escape'){ e.preventDefault(); closePairs(false); } return; }
     if (!$('syncModal').hidden){ if (e.key === 'Escape'){ e.preventDefault(); $('syncModal').hidden = true; } return; }
     if (!$('planModal').hidden){ if (e.key === 'Escape'){ e.preventDefault(); closePlan(); } return; }
+    if (!$('moreMenu').hidden && e.key === 'Escape'){ e.preventDefault(); setMore(false); return; }
     if (demo && e.key === 'Escape' && !editing()){ e.preventDefault(); exitDemo(); return; }
     if (editing() || e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key.toLowerCase();

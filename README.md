@@ -15,3 +15,10 @@ Only business names and mentor names belong in the pairings. Anyone with a viewe
 ## Today's plan
 
 Open the timer once with `?teacher=yourname` (for example `?teacher=kurtz`) and that screen remembers it. The day under the clock (top left, with ‹ › arrows to change it) and the **Today's plan** button (or P) then list that day's blocks from the `class_plans` table with AM or PM times and 1 to 3 checkpoints each. **Load** puts a block's checkpoints in Objectives, counts down to the block's end, and puts the next block in When time's up, so **Make these the objectives** (N) moves straight to the next block. Break blocks start the break with the right back-by time. `?teacher=off` forgets the teacher. Screens without a teacher never see the button, and the Mentor Day page never reads plans.
+
+## Layout
+
+- Top left: clock, class, plan day with ‹ › arrows, and Today's plan.
+- Under the hourglass: Start, Stop, −1 min, +1 min.
+- Bottom bar: Class (AM/PM), Groups, Break back-at time, Sound, Full screen, and **More** (New day, Mentor day, Sync rooms, Settings, Demo).
+- With `?teacher=` set, the teacher's AM/PM business names (table `teacher_settings`) fill any group still named "Group N". Renamed groups are never overwritten.
