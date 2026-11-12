@@ -554,6 +554,9 @@
   .settings-foot .plain{font:inherit; font-weight:700; color:var(--fg); background:var(--chip); border:1px solid var(--line); border-radius:10px; padding:8px 14px; cursor:pointer}
   .sm-row{margin-top:12px}
   #planBtn[hidden]{display:none}
+  .plan-nav{display:flex; gap:6px; margin-left:auto; margin-right:12px}
+  .plan-nav button{font:inherit; font-weight:800; font-size:14px; color:var(--fg); background:var(--chip); border:1px solid var(--line); border-radius:99px; padding:6px 13px; cursor:pointer}
+  .plan-nav button:hover{background:var(--chip-hover)}
   .plan-sub{font-size:13px; color:var(--muted); margin:-4px 0 10px}
   .plan-list{list-style:none; margin:0; padding:0}
   .plan-row{display:grid; grid-template-columns:118px 1fr auto; gap:14px; align-items:center; padding:11px 10px; border-bottom:1px solid rgba(255,255,255,.06); border-radius:10px}
@@ -852,7 +855,7 @@
 
 <div class="settings" id="planModal" hidden>
   <div class="settings-box" role="dialog" aria-label="Today's plan">
-    <div class="settings-head"><h2 id="planHead">Today's plan</h2><button class="primary" id="planClose">Done</button></div>
+    <div class="settings-head"><h2 id="planHead">Today's plan</h2><span class="plan-nav"><button id="planPrev" title="Previous day">‹</button><button id="planToday" title="Back to today">Today</button><button id="planNext" title="Next day">›</button></span><button class="primary" id="planClose">Done</button></div>
     <div class="plan-sub" id="planSub"></div>
     <ul class="plan-list" id="planList"></ul>
   </div>
@@ -2068,34 +2071,52 @@
   const times = b => (b && b[state.cls === 'PM' ? 'pm' : 'am']) || ['', ''];
   const fmtHM = hm => { if (!hm) return ''; let [h, m] = hm.split(':').map(Number); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${pad(m)} ${ap}`; };
 
-  async function fetchPlan(){
-    const date = isoDay();
-    if (plan && plan.date === date) return plan;
+  const planCache = {};
+  const shiftDay = (iso, n) => { const [y, m, d] = iso.split('-').map(Number); return isoDay(new Date(y, m - 1, d + n)); };
+  async function getPlan(date){
+    if (planCache[date]) return planCache[date];
     const res = await fetch(`${SB_URL}/rest/v1/class_plans?teacher=eq.${encodeURIComponent(TEACHER)}&plan_date=eq.${date}&select=title,blocks`, { headers: { apikey: SB_KEY } });
     if (!res.ok) throw new Error('plan ' + res.status);
     const rows = await res.json();
-    plan = { date, title: rows[0] ? rows[0].title : '', blocks: rows[0] && Array.isArray(rows[0].blocks) ? rows[0].blocks : [] };
-    return plan;
+    return planCache[date] = { date, title: rows[0] ? rows[0].title : '', blocks: rows[0] && Array.isArray(rows[0].blocks) ? rows[0].blocks : [] };
+  }
+  // today's plan, or (when today has none) the next planned day within two weeks
+  async function fetchPlan(){
+    const today = isoDay();
+    const p = await getPlan(today);
+    if (p.blocks.length) return plan = p;
+    const res = await fetch(`${SB_URL}/rest/v1/class_plans?teacher=eq.${encodeURIComponent(TEACHER)}&plan_date=gt.${today}&plan_date=lte.${shiftDay(today, 14)}&select=plan_date,title,blocks&order=plan_date.asc&limit=1`, { headers: { apikey: SB_KEY } });
+    if (res.ok){
+      const rows = await res.json();
+      if (rows[0]) return plan = planCache[rows[0].plan_date] = { date: rows[0].plan_date, title: rows[0].title, blocks: Array.isArray(rows[0].blocks) ? rows[0].blocks : [] };
+    }
+    return plan = p;
+  }
+  async function showPlanDay(date){
+    try{ plan = await getPlan(date); }catch(e){ return toast("Couldn't reach the plan. Check the internet connection."); }
+    renderPlan();
   }
   function nowIndex(){
-    if (!plan) return -1;
+    if (!plan || plan.date !== isoDay()) return -1;
     const t = Date.now();
     return plan.blocks.findIndex(b => { const [a, z] = times(b); return a && z && t >= atToday(a) && t < atToday(z); });
   }
   function renderPlan(){
     const list = $('planList'); list.innerHTML = '';
-    const d = new Date();
-    $('planHead').textContent = `Today's plan · ${state.cls}`;
+    const iso = plan ? plan.date : isoDay(), isToday = iso === isoDay();
+    const [yy, mm, dd] = iso.split('-').map(Number), d = new Date(yy, mm - 1, dd);
+    $('planHead').textContent = `${isToday ? "Today's plan" : 'Plan'} · ${state.cls}`;
     $('planSub').textContent = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) + (plan && plan.title ? ` · ${plan.title}` : '');
+    $('planToday').disabled = isToday;
     if (!plan || !plan.blocks.length){
-      list.innerHTML = '<li class="plan-empty">No plan is saved for today yet. Once a day is planned, its blocks show up here with their checkpoints.</li>';
+      list.innerHTML = `<li class="plan-empty">No plan is saved for ${isToday ? 'today' : 'this day'}. Once a day is planned, its blocks show up here with their checkpoints.</li>`;
       return;
     }
     const cur = nowIndex(), t = Date.now();
     plan.blocks.forEach((b, i) => {
       const [a, z] = times(b);
       const li = document.createElement('li');
-      li.className = 'plan-row' + (i === cur ? ' now' : '') + (z && t >= atToday(z) ? ' past' : '');
+      li.className = 'plan-row' + (i === cur ? ' now' : '') + (isToday && z && t >= atToday(z) ? ' past' : '');
       const tm = document.createElement('div'); tm.className = 'plan-time';
       tm.innerHTML = (i === cur ? '<small>Now</small>' : '') + `${fmtHM(a)}<br>${fmtHM(z)}`;
       const body = document.createElement('div');
@@ -2119,6 +2140,7 @@
     if (locked()) return lockedMsg();
     try{ await fetchPlan(); }
     catch(e){ return toast("Couldn't reach today's plan. Check the internet connection and try again."); }
+    if (plan.date !== isoDay() && plan.blocks.length) toast(`Nothing planned today, so this shows the next planned day.`);
     renderPlan(); $('planModal').hidden = false; showControls();
   }
   function closePlan(){ $('planModal').hidden = true; scheduleIdle(); }
@@ -2128,7 +2150,8 @@
     if (locked()) return lockedMsg();
     if (!plan || !plan.blocks[i]) return toast("That's the last block in today's plan.");
     const b = plan.blocks[i], [a, z] = times(b);
-    const start = atToday(a), end = atToday(z), t = Date.now();
+    const start = atToday(a), end = atToday(z), t = Date.now(), isToday = plan.date === isoDay();
+    if (b.kind === 'break' && !isToday) return toast('Breaks start from the plan on their own day. Use Start break for a test.');
     if (b.kind === 'break'){
       if (end <= t + 5000) return toast('That break is already over.');
       state.plan = { date: plan.date, idx: i, nextText: '' };
@@ -2145,7 +2168,7 @@
     state.lists.next = nextText ? [blankItem(nextText)] : [];
     state.plan = { date: plan.date, idx: i, nextText };
     // inside the block's window, count down to its end; otherwise use the block's full length
-    const ms = t >= start && t < end ? end - t : Math.max(60000, end - start);
+    const ms = isToday && t >= start && t < end ? end - t : Math.max(60000, end - start);
     state.duration = Math.max(1000, Math.round(ms / 1000) * 1000);
     running = false; finished = false; milestones = {}; remaining = state.duration; prevAllDone = false;
     save(); ['obj', 'next'].forEach(k => renderList(k)); updateProgress(); showControls(); fitSoon();
@@ -2159,7 +2182,7 @@
   // "Make these the objectives" loads the next planned block when When time's up still holds the line the plan put there
   function planNextReady(){
     const p = state.plan;
-    if (!p || !plan || p.date !== isoDay() || p.date !== plan.date || !p.nextText) return false;
+    if (!p || !plan || p.date !== plan.date || !p.nextText) return false;
     const filled = state.lists.next.filter(x => x.text.trim());
     return filled.length === 1 && filled[0].text.trim() === p.nextText && !!plan.blocks[p.idx + 1];
   }
@@ -2167,6 +2190,9 @@
     $('planBtn').hidden = false;
     $('planBtn').addEventListener('click', openPlan);
     $('planClose').addEventListener('click', closePlan);
+    $('planPrev').addEventListener('click', () => showPlanDay(shiftDay(plan ? plan.date : isoDay(), -1)));
+    $('planNext').addEventListener('click', () => showPlanDay(shiftDay(plan ? plan.date : isoDay(), 1)));
+    $('planToday').addEventListener('click', () => showPlanDay(isoDay()));
     $('planModal').addEventListener('click', e => { if (e.target === $('planModal')) closePlan(); });
     fetchPlan().catch(() => {}); // warm it so the first click and the N key are instant
   }
