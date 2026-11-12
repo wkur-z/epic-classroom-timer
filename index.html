@@ -57,6 +57,14 @@
   .wall-time{display:block; font-family:var(--display); font-weight:600; font-size:min(3vw,5.2vh); color:var(--soft); font-variant-numeric:tabular-nums; letter-spacing:.01em}
   .wall-cls{display:inline-block; margin-top:.8vh; font-size:min(1vw,1.8vh); font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:#1d1305; background:var(--sand); padding:.35em .8em; border-radius:99px}
   body.break .wall{visibility:hidden}
+  .wall-day{display:flex; align-items:center; justify-content:center; gap:.3em; margin-top:1vh; font-size:min(1.05vw,1.9vh)}
+  .wall-day[hidden]{display:none}
+  .wall-day button{font:inherit; font-weight:800; color:var(--soft); background:none; border:0; cursor:pointer; padding:.25em .45em; border-radius:99px}
+  .wall-day .wd-lbl{letter-spacing:.06em; text-transform:uppercase; border:1px solid var(--line); padding:.3em .9em}
+  .wall-day .wd-lbl.has{color:var(--sand); border-color:color-mix(in srgb, var(--sand) 55%, transparent)}
+  .wall-day .wd-lbl:hover, .wall-day .wd-arrow:hover{background:var(--chip-hover)}
+  .wall-day .wd-arrow{font-size:1.5em; line-height:.8; transition:opacity .5s}
+  body.idle .wall-day .wd-arrow{opacity:0; pointer-events:none}
   .hg{height:var(--hgH); aspect-ratio:200/340; margin-top:auto; transform-origin:50% 50%}
   .hg-inner{width:100%; height:100%; transform-origin:50% 50%}
   .hg-inner.wobble{animation:wobble .6s ease}
@@ -554,9 +562,6 @@
   .settings-foot .plain{font:inherit; font-weight:700; color:var(--fg); background:var(--chip); border:1px solid var(--line); border-radius:10px; padding:8px 14px; cursor:pointer}
   .sm-row{margin-top:12px}
   #planBtn[hidden]{display:none}
-  .plan-nav{display:flex; gap:6px; margin-left:auto; margin-right:12px}
-  .plan-nav button{font:inherit; font-weight:800; font-size:14px; color:var(--fg); background:var(--chip); border:1px solid var(--line); border-radius:99px; padding:6px 13px; cursor:pointer}
-  .plan-nav button:hover{background:var(--chip-hover)}
   .plan-sub{font-size:13px; color:var(--muted); margin:-4px 0 10px}
   .plan-list{list-style:none; margin:0; padding:0}
   .plan-row{display:grid; grid-template-columns:118px 1fr auto; gap:14px; align-items:center; padding:11px 10px; border-bottom:1px solid rgba(255,255,255,.06); border-radius:10px}
@@ -582,7 +587,9 @@
 
 <main class="stage">
   <div class="hgCol">
-    <div class="wall"><span class="wall-time" id="wallTime"></span><span class="wall-cls" id="wallCls"></span></div>
+    <div class="wall"><span class="wall-time" id="wallTime"></span><span class="wall-cls" id="wallCls"></span>
+      <div class="wall-day" id="wallDay" hidden><button class="wd-arrow" id="dayPrev" title="Previous day" aria-label="Previous day">‹</button><button class="wd-lbl" id="dayLbl" title="Open this day's plan (P)"></button><button class="wd-arrow" id="dayNext" title="Next day" aria-label="Next day">›</button></div>
+    </div>
     <div class="hg" id="hg"><div class="hg-inner" id="hgInner">
       <svg id="hgSvg" viewBox="0 0 200 340" aria-hidden="true">
         <defs>
@@ -855,7 +862,7 @@
 
 <div class="settings" id="planModal" hidden>
   <div class="settings-box" role="dialog" aria-label="Today's plan">
-    <div class="settings-head"><h2 id="planHead">Today's plan</h2><span class="plan-nav"><button id="planPrev" title="Previous day">‹</button><button id="planToday" title="Back to today">Today</button><button id="planNext" title="Next day">›</button></span><button class="primary" id="planClose">Done</button></div>
+    <div class="settings-head"><h2 id="planHead">Today's plan</h2><button class="primary" id="planClose">Done</button></div>
     <div class="plan-sub" id="planSub"></div>
     <ul class="plan-list" id="planList"></ul>
   </div>
@@ -2092,9 +2099,19 @@
     }
     return plan = p;
   }
+  // the day shown under the clock; the plan panel always opens on this day
+  function renderDay(){
+    const iso = plan ? plan.date : isoDay();
+    const [yy, mm, dd] = iso.split('-').map(Number), d = new Date(yy, mm - 1, dd);
+    const lbl = $('dayLbl');
+    lbl.textContent = iso === isoDay() ? 'Today' : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    lbl.classList.toggle('has', !!(plan && plan.blocks.length));
+    lbl.title = (plan && plan.blocks.length ? `Open the plan for ${d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}` : 'No plan saved for this day') + ' (P)';
+  }
   async function showPlanDay(date){
     try{ plan = await getPlan(date); }catch(e){ return toast("Couldn't reach the plan. Check the internet connection."); }
-    renderPlan();
+    renderDay();
+    if (!$('planModal').hidden) renderPlan();
   }
   function nowIndex(){
     if (!plan || plan.date !== isoDay()) return -1;
@@ -2107,7 +2124,6 @@
     const [yy, mm, dd] = iso.split('-').map(Number), d = new Date(yy, mm - 1, dd);
     $('planHead').textContent = `${isToday ? "Today's plan" : 'Plan'} · ${state.cls}`;
     $('planSub').textContent = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) + (plan && plan.title ? ` · ${plan.title}` : '');
-    $('planToday').disabled = isToday;
     if (!plan || !plan.blocks.length){
       list.innerHTML = `<li class="plan-empty">No plan is saved for ${isToday ? 'today' : 'this day'}. Once a day is planned, its blocks show up here with their checkpoints.</li>`;
       return;
@@ -2138,9 +2154,9 @@
   async function openPlan(){
     if (!TEACHER) return;
     if (locked()) return lockedMsg();
-    try{ await fetchPlan(); }
-    catch(e){ return toast("Couldn't reach today's plan. Check the internet connection and try again."); }
-    if (plan.date !== isoDay() && plan.blocks.length) toast(`Nothing planned today, so this shows the next planned day.`);
+    try{ if (!plan) await fetchPlan(); else plan = await getPlan(plan.date); }
+    catch(e){ return toast("Couldn't reach the plan. Check the internet connection and try again."); }
+    renderDay();
     renderPlan(); $('planModal').hidden = false; showControls();
   }
   function closePlan(){ $('planModal').hidden = true; scheduleIdle(); }
@@ -2190,11 +2206,12 @@
     $('planBtn').hidden = false;
     $('planBtn').addEventListener('click', openPlan);
     $('planClose').addEventListener('click', closePlan);
-    $('planPrev').addEventListener('click', () => showPlanDay(shiftDay(plan ? plan.date : isoDay(), -1)));
-    $('planNext').addEventListener('click', () => showPlanDay(shiftDay(plan ? plan.date : isoDay(), 1)));
-    $('planToday').addEventListener('click', () => showPlanDay(isoDay()));
+    $('wallDay').hidden = false; renderDay();
+    $('dayPrev').addEventListener('click', () => { showControls(); showPlanDay(shiftDay(plan ? plan.date : isoDay(), -1)); scheduleIdle(); });
+    $('dayNext').addEventListener('click', () => { showControls(); showPlanDay(shiftDay(plan ? plan.date : isoDay(), 1)); scheduleIdle(); });
+    $('dayLbl').addEventListener('click', openPlan);
     $('planModal').addEventListener('click', e => { if (e.target === $('planModal')) closePlan(); });
-    fetchPlan().catch(() => {}); // warm it so the first click and the N key are instant
+    fetchPlan().then(renderDay).catch(() => {}); // today, or the next planned day when today is empty
   }
 
   /* ================= settings ================= */
