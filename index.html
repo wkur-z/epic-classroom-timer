@@ -553,6 +553,20 @@
   .settings-foot .primary, .settings-head .primary{font:inherit; font-weight:800; color:#1d1305; background:var(--sand); border:0; border-radius:10px; padding:8px 18px; cursor:pointer}
   .settings-foot .plain{font:inherit; font-weight:700; color:var(--fg); background:var(--chip); border:1px solid var(--line); border-radius:10px; padding:8px 14px; cursor:pointer}
   .sm-row{margin-top:12px}
+  #planBtn[hidden]{display:none}
+  .plan-sub{font-size:13px; color:var(--muted); margin:-4px 0 10px}
+  .plan-list{list-style:none; margin:0; padding:0}
+  .plan-row{display:grid; grid-template-columns:118px 1fr auto; gap:14px; align-items:center; padding:11px 10px; border-bottom:1px solid rgba(255,255,255,.06); border-radius:10px}
+  .plan-row.now{background:color-mix(in srgb, var(--sand) 12%, transparent)}
+  .plan-row.past{opacity:.5}
+  .plan-time{font-weight:800; font-variant-numeric:tabular-nums; color:var(--soft); font-size:14px}
+  .plan-time small{display:block; font-size:11px; font-weight:800; letter-spacing:.12em; color:var(--sand); text-transform:uppercase}
+  .plan-title{font-weight:800; font-size:15px; line-height:1.3}
+  .plan-cps{margin:4px 0 0; padding:0; list-style:none; color:var(--muted); font-size:13px; line-height:1.45}
+  .plan-cps li::before{content:'○  '; color:var(--sand)}
+  .plan-row button{font:inherit; font-weight:800; font-size:13px; color:#1d1305; background:var(--sand); border:0; border-radius:99px; padding:7px 16px; cursor:pointer; white-space:nowrap}
+  .plan-row.past button{color:var(--fg); background:var(--chip)}
+  .plan-empty{padding:18px 4px; color:var(--muted); line-height:1.5}
   .sm-msg{color:var(--danger); font-weight:700}
   .sm-msg.ok{color:var(--teal)}
 </style>
@@ -754,6 +768,7 @@
   </div>
   <span class="sep"></span>
   <div class="group">
+    <button id="planBtn" class="vhide" hidden title="Load a block from today's class plan (P)">Today's plan</button>
     <button id="syncBtn" title="Keep this timer in sync with other rooms through a link">Sync rooms</button>
     <button id="newDayBtn" class="vhide" title="Clear all group check-offs and bonus banks for AM and PM, and reset the timer">New day</button>
     <button id="demoBtn" class="shide" title="Run a narrated tour on sample data. Your real setup is untouched.">Demo</button>
@@ -832,6 +847,14 @@
     <div class="pm-preview" id="pmAboutPreview"></div>
     <div class="set-hint pm-priv">Use business names, not student names. Anyone with the viewer link can see these.</div>
     <div class="settings-foot"><button class="plain" id="pmCancel">Cancel</button><button class="primary" id="pmSave">Save</button></div>
+  </div>
+</div>
+
+<div class="settings" id="planModal" hidden>
+  <div class="settings-box" role="dialog" aria-label="Today's plan">
+    <div class="settings-head"><h2 id="planHead">Today's plan</h2><button class="primary" id="planClose">Done</button></div>
+    <div class="plan-sub" id="planSub"></div>
+    <ul class="plan-list" id="planList"></ul>
   </div>
 </div>
 
@@ -958,6 +981,7 @@
     if (s){
       if (s.duration > 0) state.duration = s.duration;
       if (typeof s.sound === 'boolean') state.sound = s.sound;
+      if (s.plan && typeof s.plan.date === 'string' && Number.isInteger(s.plan.idx)) state.plan = { date: s.plan.date, idx: s.plan.idx, nextText: String(s.plan.nextText || '') };
       if (s.titles) state.titles = { ...DEFAULT_TITLES, ...s.titles };
       ['obj', 'early', 'next', 'back'].forEach(k => {
         if (s.lists && Array.isArray(s.lists[k])) state.lists[k] = s.lists[k].map(i => {
@@ -2005,6 +2029,7 @@
   /* ================= next segment: When time's up becomes the objectives ================= */
   function syncMoveBtn(){ $('moveBtn').hidden = !state.lists.next.some(i => i.text.trim()); }
   function promoteNext(){
+    if (planNextReady()) return loadPlanBlock(state.plan.idx + 1);
     const filled = state.lists.next.filter(i => i.text.trim());
     if (!filled.length) return toast("Add something to When time's up first.");
     const incoming = filled.slice(0, MAX_OBJ), leftover = filled.slice(MAX_OBJ);
@@ -2024,6 +2049,127 @@
     });
   }
   $('moveBtn').addEventListener('click', promoteNext);
+
+  /* ================= today's class plan ================= */
+  // Plans live in the class_plans table (read only to the public), one row per teacher per day.
+  // A screen picks its teacher once with ?teacher=name in the link; ?teacher=off forgets it.
+  const TEACHER = (() => {
+    const q = (QS.get('teacher') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30);
+    try{
+      if (q === 'off'){ localStorage.removeItem('goalTimer.teacher'); return ''; }
+      if (q.length >= 2){ localStorage.setItem('goalTimer.teacher', q); return q; }
+      return localStorage.getItem('goalTimer.teacher') || '';
+    }catch(e){ return q.length >= 2 && q !== 'off' ? q : ''; }
+  })();
+  const isoDay = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  let plan = null; // { date, title, blocks }
+  const cleanTitle = t => String(t || '').replace(/^WARM-UP:\s*/i, 'Warm-up: ').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').replace(/\s+/g, ' ').trim();
+  const atToday = hm => { const [h, m] = String(hm).split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0); return d.getTime(); };
+  const times = b => (b && b[state.cls === 'PM' ? 'pm' : 'am']) || ['', ''];
+  const fmtHM = hm => { if (!hm) return ''; let [h, m] = hm.split(':').map(Number); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${pad(m)} ${ap}`; };
+
+  async function fetchPlan(){
+    const date = isoDay();
+    if (plan && plan.date === date) return plan;
+    const res = await fetch(`${SB_URL}/rest/v1/class_plans?teacher=eq.${encodeURIComponent(TEACHER)}&plan_date=eq.${date}&select=title,blocks`, { headers: { apikey: SB_KEY } });
+    if (!res.ok) throw new Error('plan ' + res.status);
+    const rows = await res.json();
+    plan = { date, title: rows[0] ? rows[0].title : '', blocks: rows[0] && Array.isArray(rows[0].blocks) ? rows[0].blocks : [] };
+    return plan;
+  }
+  function nowIndex(){
+    if (!plan) return -1;
+    const t = Date.now();
+    return plan.blocks.findIndex(b => { const [a, z] = times(b); return a && z && t >= atToday(a) && t < atToday(z); });
+  }
+  function renderPlan(){
+    const list = $('planList'); list.innerHTML = '';
+    const d = new Date();
+    $('planHead').textContent = `Today's plan · ${state.cls}`;
+    $('planSub').textContent = d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) + (plan && plan.title ? ` · ${plan.title}` : '');
+    if (!plan || !plan.blocks.length){
+      list.innerHTML = '<li class="plan-empty">No plan is saved for today yet. Once a day is planned, its blocks show up here with their checkpoints.</li>';
+      return;
+    }
+    const cur = nowIndex(), t = Date.now();
+    plan.blocks.forEach((b, i) => {
+      const [a, z] = times(b);
+      const li = document.createElement('li');
+      li.className = 'plan-row' + (i === cur ? ' now' : '') + (z && t >= atToday(z) ? ' past' : '');
+      const tm = document.createElement('div'); tm.className = 'plan-time';
+      tm.innerHTML = (i === cur ? '<small>Now</small>' : '') + `${fmtHM(a)}<br>${fmtHM(z)}`;
+      const body = document.createElement('div');
+      const ttl = document.createElement('div'); ttl.className = 'plan-title'; ttl.textContent = b.title || '';
+      body.appendChild(ttl);
+      const cps = (b.checkpoints || []).filter(Boolean);
+      if (cps.length){
+        const ul = document.createElement('ul'); ul.className = 'plan-cps';
+        cps.forEach(c => { const x = document.createElement('li'); x.textContent = c; ul.appendChild(x); });
+        body.appendChild(ul);
+      }
+      const btn = document.createElement('button');
+      btn.textContent = b.kind === 'break' ? 'Start break' : 'Load';
+      btn.addEventListener('click', () => { closePlan(); loadPlanBlock(i); });
+      li.append(tm, body, btn);
+      list.appendChild(li);
+    });
+  }
+  async function openPlan(){
+    if (!TEACHER) return;
+    if (locked()) return lockedMsg();
+    try{ await fetchPlan(); }
+    catch(e){ return toast("Couldn't reach today's plan. Check the internet connection and try again."); }
+    renderPlan(); $('planModal').hidden = false; showControls();
+  }
+  function closePlan(){ $('planModal').hidden = true; scheduleIdle(); }
+
+  // Fills Objectives with the block's checkpoints, sets the time to the block's end, and puts the next block in When time's up.
+  function loadPlanBlock(i){
+    if (locked()) return lockedMsg();
+    if (!plan || !plan.blocks[i]) return toast("That's the last block in today's plan.");
+    const b = plan.blocks[i], [a, z] = times(b);
+    const start = atToday(a), end = atToday(z), t = Date.now();
+    if (b.kind === 'break'){
+      if (end <= t + 5000) return toast('That break is already over.');
+      state.plan = { date: plan.date, idx: i, nextText: '' };
+      startBreak(end);
+      return toast(`Break until ${fmtHM(z)}.`);
+    }
+    if (slot) closeSlot();
+    if (mode === 'break') endBreak();
+    const snap = JSON.stringify({ lists: state.lists, classes: state.classes, duration: state.duration, plan: state.plan || null });
+    const cps = (b.checkpoints || []).map(c => String(c).trim()).filter(Boolean).slice(0, MAX_OBJ);
+    state.lists.obj = (cps.length ? cps : [cleanTitle(b.title)]).map(c => blankItem(c));
+    const nb = plan.blocks[i + 1];
+    const nextText = nb ? (nb.kind === 'break' ? `Break until ${fmtHM(times(nb)[1])}` : `Next: ${cleanTitle(nb.title)}`) : '';
+    state.lists.next = nextText ? [blankItem(nextText)] : [];
+    state.plan = { date: plan.date, idx: i, nextText };
+    // inside the block's window, count down to its end; otherwise use the block's full length
+    const ms = t >= start && t < end ? end - t : Math.max(60000, end - start);
+    state.duration = Math.max(1000, Math.round(ms / 1000) * 1000);
+    running = false; finished = false; milestones = {}; remaining = state.duration; prevAllDone = false;
+    save(); ['obj', 'next'].forEach(k => renderList(k)); updateProgress(); showControls(); fitSoon();
+    toast(`Loaded ${cleanTitle(b.title)}. Press Space to start.`, () => {
+      const old = JSON.parse(snap);
+      state.lists = old.lists; state.classes = old.classes; state.duration = old.duration; state.plan = old.plan;
+      remaining = state.duration; prevAllDone = true;
+      save(); ['obj', 'early', 'next', 'back'].forEach(k => renderList(k)); updateProgress();
+    }, 'Undo', 5000);
+  }
+  // "Make these the objectives" loads the next planned block when When time's up still holds the line the plan put there
+  function planNextReady(){
+    const p = state.plan;
+    if (!p || !plan || p.date !== isoDay() || p.date !== plan.date || !p.nextText) return false;
+    const filled = state.lists.next.filter(x => x.text.trim());
+    return filled.length === 1 && filled[0].text.trim() === p.nextText && !!plan.blocks[p.idx + 1];
+  }
+  if (TEACHER){
+    $('planBtn').hidden = false;
+    $('planBtn').addEventListener('click', openPlan);
+    $('planClose').addEventListener('click', closePlan);
+    $('planModal').addEventListener('click', e => { if (e.target === $('planModal')) closePlan(); });
+    fetchPlan().catch(() => {}); // warm it so the first click and the N key are instant
+  }
 
   /* ================= settings ================= */
   const fmtMin = m => m % 1 === 0 ? `${m} min` : `${Math.floor(m)}:30`;
@@ -2290,6 +2436,7 @@
     if (!$('settings').hidden && e.key === 'Escape'){ e.preventDefault(); closeSettings(); return; }
     if (!$('pairModal').hidden){ if (e.key === 'Escape'){ e.preventDefault(); closePairs(false); } return; }
     if (!$('syncModal').hidden){ if (e.key === 'Escape'){ e.preventDefault(); $('syncModal').hidden = true; } return; }
+    if (!$('planModal').hidden){ if (e.key === 'Escape'){ e.preventDefault(); closePlan(); } return; }
     if (demo && e.key === 'Escape' && !editing()){ e.preventDefault(); exitDemo(); return; }
     if (editing() || e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key.toLowerCase();
@@ -2299,6 +2446,7 @@
     else if (k === 'r') reset();
     else if (k === 'n' && mode !== 'break') promoteNext();
     else if (k === 'f') toggleFs();
+    else if (k === 'p' && TEACHER){ openPlan(); return; }
     else if (k === 'arrowup'){ e.preventDefault(); adjust(60000); }
     else if (k === 'arrowdown'){ e.preventDefault(); adjust(-60000); }
     else return;
