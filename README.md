@@ -18,7 +18,7 @@ Open the timer once with `?teacher=yourname` (for example `?teacher=kurtz`) and 
 
 ## Table spin
 
-A small spin wheel sits under the hourglass with this class's group names and colors. Click it to spin for table pick order. The result screen shows the team, counts down 10 seconds, then runs a short table timer (0:30, 1:00, 2:00 or any length). **Start now** skips the 10 second wait. The timer keeps running in the middle of the small wheel after the result closes; click the middle to stop it.
+A small spin wheel sits under the hourglass with this class's group names and colors. Click it to spin for table pick order. The result screen shows the team, counts down 10 seconds, then runs a short table timer (0:30, 1:00, 2:00 or any length). **Start now** skips the 10 second wait. The timer keeps running in the middle of the small wheel after the result closes; click the middle to stop it. **Hide timer** on the result screen (or **Show timer on the pick screen** in the big wheel) shows just the team; it remembers your choice.
 
 The ⤢ button, **More → Table spin**, or W opens the big wheel: pick order, click a team to take it off or put it back, Undo, Reset, and timer settings. AM and PM keep separate pick orders, saved on this computer. The wheel is hidden on viewer screens, on break and on Mentor Day.
 

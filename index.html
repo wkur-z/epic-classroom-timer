@@ -705,7 +705,11 @@
   .sr-btns{display:flex; flex-direction:column; gap:.6rem}
   .sr-btns .sv-btn{font-size:1.05rem; padding:.7rem 1.3rem}
   .sr-lens{margin-top:2.2vh; display:flex; justify-content:center; align-items:center; gap:.7rem; color:var(--muted); font-weight:600; font-size:.95rem}
-  .sr-foot{margin-top:2vh; color:var(--muted); font-size:min(1vw,1.9vh)}
+  .sr-foot{margin-top:2vh; color:var(--muted); font-size:min(1vw,1.9vh); display:flex; justify-content:center; align-items:center; gap:1.2rem; flex-wrap:wrap}
+  .sr-tog{font:700 .9rem var(--text); color:var(--soft); background:transparent; border:1px solid var(--line); border-radius:999px; padding:.35rem .9rem; cursor:pointer}
+  .sr-tog:hover{background:var(--chip); color:var(--fg)}
+  .sr-box.notimer .sr-timer, .sr-box.notimer .sr-lens{display:none}
+  .sr-box.notimer .sr-team{margin-bottom:1vh}
 
   @media (max-aspect-ratio: 1/1){
     .spinDock{display:none}
@@ -1048,6 +1052,7 @@
           <span class="lens" id="svLens"></span>
           <label><input type="checkbox" id="svAuto"> Start 10 sec after each pick</label>
           <label><input type="checkbox" id="svRemove"> Remove team after it picks</label>
+          <label><input type="checkbox" id="svShow"> Show timer on the pick screen</label>
         </div>
       </section>
       <div class="sv-actions"><button class="sv-btn" id="svUndo">Undo last pick</button><button class="sv-btn" id="svReset">Reset picks</button></div>
@@ -1065,7 +1070,7 @@
       <div class="sr-btns"><button class="sv-btn primary" id="srGo">Start now</button><button class="sv-btn" id="srStop">No timer</button></div>
     </div>
     <div class="sr-lens">Timer length <span class="lens" id="srLens"></span></div>
-    <div class="sr-foot">Click outside this box or press Space to close. The timer keeps running on the small wheel.</div>
+    <div class="sr-foot"><span id="srFootTxt">Click outside this box or press Space to close. The timer keeps running on the small wheel.</span><button class="sr-tog" id="srTog" type="button">Hide timer</button></div>
   </div>
 </div>
 
@@ -3259,13 +3264,14 @@
   const SPIN_DELAY = 10;
   const LEN_CHOICES = [30, 60, 120];
   const ORDS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
-  const spinSt = { len: 30, auto: true, remove: true, AM: null, PM: null };
+  const spinSt = { len: 30, auto: true, remove: true, showTimer: true, AM: null, PM: null };
   try{
     const o = JSON.parse(localStorage.getItem(SPIN_KEY) || 'null');
     if (o && typeof o === 'object'){
       if (Number(o.len) > 0) spinSt.len = Math.min(3600, Math.round(Number(o.len)));
       if (typeof o.auto === 'boolean') spinSt.auto = o.auto;
       if (typeof o.remove === 'boolean') spinSt.remove = o.remove;
+      if (typeof o.showTimer === 'boolean') spinSt.showTimer = o.showTimer;
       ['AM', 'PM'].forEach(cl => {
         const c = o[cl];
         if (c && Array.isArray(c.pool) && Array.isArray(c.order)){
@@ -3528,6 +3534,7 @@
     }
     $('svAuto').checked = spinSt.auto;
     $('svRemove').checked = spinSt.remove;
+    swApplyShow();
     $('svUndo').disabled = !s.order.length;
     swRenderTimer(swPhase === 'idle' ? 0 : (swEnd - performance.now()) / 1000);
     swDrawAll();
@@ -3571,6 +3578,17 @@
     requestAnimationFrame(renderSpin);
   }
 
+  // whether the pick screen shows the table timer; the timer itself still follows its own settings
+  function swApplyShow(){
+    const on = spinSt.showTimer;
+    $('srBox').classList.toggle('notimer', !on);
+    $('srTog').textContent = on ? 'Hide timer' : 'Show timer';
+    $('srTog').title = on ? 'Hide the timer on this screen' : 'Show the timer on this screen';
+    $('srFootTxt').textContent = on ? 'Click outside this box or press Space to close. The timer keeps running on the small wheel.' : 'Click outside this box or press Space to close.';
+    $('svShow').checked = on;
+  }
+  function swSetShow(on){ spinSt.showTimer = on; saveSpin(); swApplyShow(); }
+
   /* ---- wiring ---- */
   const hubClick = e => { e.stopPropagation(); if (swPhase !== 'idle') swStopTimer(); else swSpin(); };
   $('sdWheel').addEventListener('click', swSpin);
@@ -3584,8 +3602,10 @@
   $('svTStop').addEventListener('click', swStopTimer);
   $('srGo').addEventListener('click', e => { e.stopPropagation(); swStartNow(); });
   $('srStop').addEventListener('click', e => { e.stopPropagation(); swStopTimer(); });
-  $('svAuto').addEventListener('change', e => { spinSt.auto = e.target.checked; saveSpin(); renderSpin(); });
-  $('svRemove').addEventListener('change', e => { spinSt.remove = e.target.checked; saveSpin(); renderSpin(); });
+  $('svAuto').addEventListener('change', e => { spinSt.auto = e.target.checked; e.target.blur(); saveSpin(); renderSpin(); });
+  $('svRemove').addEventListener('change', e => { spinSt.remove = e.target.checked; e.target.blur(); saveSpin(); renderSpin(); });
+  $('svShow').addEventListener('change', e => { e.target.blur(); swSetShow(e.target.checked); });
+  $('srTog').addEventListener('click', e => { e.stopPropagation(); swSetShow(!spinSt.showTimer); $('srTog').blur(); });
   $('svUndo').addEventListener('click', swUndo);
   $('svReset').addEventListener('click', swReset);
   $('spinResult').addEventListener('click', e => { if (!$('srBox').contains(e.target)) swCloseResult(); });
