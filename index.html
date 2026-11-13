@@ -606,6 +606,112 @@
   .plan-empty{padding:18px 4px; color:var(--muted); line-height:1.5}
   .sm-msg{color:var(--danger); font-weight:700}
   .sm-msg.ok{color:var(--teal)}
+
+  /* ---------- table spin ---------- */
+  .spinDock{--sz:min(22vh,calc(var(--hgH) * .47)); position:relative; width:var(--sz); height:var(--sz); align-self:center; flex:none; margin:1vh 0 3.4vh}
+  body.break .spinDock, body.mentor .spinDock, body.nogroups .spinDock{display:none}
+  .sd-wheel{position:absolute; inset:0; cursor:pointer; border-radius:50%}
+  .sd-wheel canvas, .sv-wheel canvas{width:100%; height:100%; display:block}
+  .sd-ptr, .sv-ptr{position:absolute; left:50%; top:-3%; transform:translateX(-50%); z-index:2; width:0; height:0; border-left:.55em solid transparent; border-right:.55em solid transparent; border-top:1.1em solid var(--fg); filter:drop-shadow(0 2px 3px rgba(0,0,0,.6)); pointer-events:none}
+  .sd-ptr{font-size:calc(var(--sz) / 11)}
+  .hub{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:38%; aspect-ratio:1; border-radius:50%;
+    background:#101317; border:3px solid rgba(255,255,255,.85); color:var(--fg); cursor:pointer; padding:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.05em; font-family:var(--display); font-weight:700;
+    box-shadow:0 6px 18px rgba(0,0,0,.55); transition:transform .12s}
+  .hub:hover{transform:translate(-50%,-50%) scale(1.05)}
+  .hub .hc{font-size:1em; line-height:.9; font-variant-numeric:tabular-nums; letter-spacing:.01em}
+  .hub .hs{font-family:var(--text); font-size:.3em; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+  .hub.delay .hc{color:var(--muted)}
+  .hub.low .hc, .hub.done .hc{color:var(--danger)}
+  .hub.done .hc{animation:pulse 1s ease-in-out infinite}
+  .hub.off{background:#2a2e35; cursor:default}
+  .spinDock .hub{font-size:calc(var(--sz) / 7.2)}
+  .sd-open{position:absolute; right:-6%; top:-6%; z-index:3; width:28%; aspect-ratio:1; max-width:2.6rem; border-radius:50%;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--soft); cursor:pointer; display:grid; place-items:center; padding:0; transition:opacity .5s, background .15s}
+  .sd-open:hover{background:#2a2f37; color:var(--fg)}
+  .sd-open svg{width:55%; height:55%; fill:currentColor}
+  body.idle .sd-open{opacity:0; pointer-events:none}
+  .sd-tag{position:absolute; left:50%; bottom:-3.2vh; transform:translateX(-50%); white-space:nowrap; font-size:min(.95vw,1.7vh); font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); pointer-events:none}
+
+  .spinView{position:fixed; inset:0; z-index:10; display:flex; flex-direction:column; padding:3vh 3.2vw 2.4vh; gap:2vh;
+    background:radial-gradient(110% 80% at 25% 40%, #161a20 0%, var(--bg) 62%)}
+  .spinView[hidden]{display:none}
+  .sv-head{display:flex; align-items:center; gap:1.4vw}
+  .sv-head h2{margin:0; font-family:var(--display); font-weight:700; font-size:min(3.4vw,6vh); line-height:1; letter-spacing:.005em}
+  .sv-head h2 span{color:var(--sand)}
+  .sv-hint{color:var(--muted); font-weight:600; font-size:min(1.1vw,2vh); margin-left:auto}
+  .sv-btn{font:600 .95rem var(--text); color:var(--fg); background:var(--chip); border:1px solid var(--line); border-radius:999px; padding:.55rem 1rem; cursor:pointer; transition:background .15s}
+  .sv-btn:hover{background:var(--chip-hover)}
+  .sv-btn.primary{background:var(--sand); color:#1a1206; border-color:var(--sand); font-weight:800}
+  .sv-btn.primary:hover{filter:brightness(1.07)}
+  .sv-body{flex:1; min-height:0; display:grid; grid-template-columns:auto minmax(0,1fr); gap:3vw; align-items:center}
+  .sv-wheel{--sz:min(80vh,52vw); position:relative; width:var(--sz); height:var(--sz); cursor:pointer}
+  .sv-wheel .sv-ptr{font-size:calc(var(--sz) / 16)}
+  .sv-wheel .hub{width:24%; font-size:calc(var(--sz) / 14); border-width:5px}
+  .sv-side{display:flex; flex-direction:column; gap:1.8vh; min-width:0; align-self:stretch; justify-content:center}
+  .sv-card{--accent:var(--sand); position:relative; background:var(--panel); border-radius:14px; padding:2vh 1.4vw 1.8vh; overflow:hidden;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 12px 30px -18px rgba(0,0,0,.8)}
+  .sv-card::before{content:''; position:absolute; left:0; right:0; top:0; height:5px; background:var(--accent)}
+  .sv-card.c2{--accent:var(--blue)}
+  .sv-card.c3{--accent:var(--teal)}
+  .sv-card h3{margin:0 0 1.4vh; display:flex; justify-content:space-between; align-items:baseline; gap:1vw; font-size:min(1.55vw,2.8vh); font-weight:800}
+  .sv-card h3 small{font-size:.62em; color:var(--muted); font-weight:600; letter-spacing:0}
+  .sv-order{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; grid-auto-flow:column; grid-template-rows:repeat(var(--rows,4),auto); gap:.8vh 1vw}
+  .sv-order li{display:flex; align-items:center; gap:.7vw; min-height:5vh; padding:.5vh .6vw; border-radius:10px; background:rgba(255,255,255,.05); min-width:0}
+  .sv-order .n{flex:none; width:4.4vh; height:4.4vh; border-radius:8px; display:grid; place-items:center; font-family:var(--display); font-weight:700; font-size:2.8vh; color:#111}
+  .sv-order .t{font-weight:700; font-size:min(1.5vw,2.7vh); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .sv-order li.wait{background:transparent; border:2px dashed rgba(255,255,255,.12)}
+  .sv-order li.wait .n{background:transparent; color:rgba(255,255,255,.3); border:2px dashed rgba(255,255,255,.16)}
+  .sv-order li.wait .t{color:rgba(255,255,255,.3); font-weight:600}
+  .sv-order li.pop{animation:rise .45s cubic-bezier(.3,1.4,.5,1)}
+  .sv-chips{display:flex; flex-wrap:wrap; gap:.6rem}
+  .sv-chip{font:700 min(1.15vw,2.1vh) var(--text); border-radius:999px; padding:.45em .95em; cursor:pointer; color:#111; border:2px solid transparent; transition:transform .1s}
+  .sv-chip:hover{transform:translateY(-1px)}
+  .sv-chip.off{background:transparent !important; color:var(--muted); border:2px dashed rgba(255,255,255,.2) !important}
+  .sv-chip.off .x{text-decoration:line-through}
+  .sv-chip .pk{font-weight:800; margin-right:.35em}
+  .sv-timer{display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:.8vh 1.4vw}
+  .sv-tstate{font-size:min(.95vw,1.7vh); font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+  .sv-tclock{font-family:var(--display); font-weight:700; font-size:min(5.4vw,9.5vh); line-height:.9; font-variant-numeric:tabular-nums}
+  .sv-timer.delay .sv-tclock{color:var(--muted)}
+  .sv-timer.low .sv-tclock, .sv-timer.done .sv-tclock{color:var(--danger)}
+  .sv-timer.done .sv-tclock{animation:pulse 1s ease-in-out infinite}
+  .sv-tbtns{grid-column:3; display:flex; gap:.5rem}
+  .sv-tset{grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:center; gap:.6rem 1.2rem; color:var(--soft); font-size:.92rem; font-weight:600}
+  .sv-tset label{display:flex; align-items:center; gap:.45rem; cursor:pointer}
+  .sv-tset input[type=checkbox]{accent-color:var(--sand); width:1.05rem; height:1.05rem}
+  .lens{display:inline-flex; gap:.35rem; align-items:center}
+  .lens button{font:700 .9rem var(--text); color:var(--fg); background:var(--chip); border:1px solid var(--line); border-radius:999px; padding:.38rem .75rem; cursor:pointer; font-variant-numeric:tabular-nums}
+  .lens button:hover{background:var(--chip-hover)}
+  .lens button.on{background:var(--sand); border-color:var(--sand); color:#1a1206}
+  .lens input{width:4.6rem; font:700 .9rem var(--text); color:var(--fg); background:var(--chip); border:1px solid var(--line); border-radius:999px; padding:.38rem .5rem; text-align:center}
+  .lens input:focus{outline:none; border-color:var(--sand)}
+  .sv-actions{display:flex; gap:.6rem; flex-wrap:wrap}
+
+  .spinResult{position:fixed; inset:0; z-index:11; display:none; place-items:center; background:rgba(8,9,11,.74); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px)}
+  .spinResult.show{display:grid; animation:fadein .3s ease}
+  .sr-box{--tc:var(--sand); position:relative; overflow:hidden; text-align:center; padding:5vh 4.5vw 3.4vh; border-radius:28px; min-width:min(62vw,980px); max-width:92vw;
+    background:linear-gradient(180deg,#22262d,#15181d); border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 30px 90px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.08); animation:rise .45s cubic-bezier(.3,1.4,.5,1); cursor:default}
+  .sr-box::before{content:''; position:absolute; left:0; right:0; top:0; height:12px; background:var(--tc)}
+  .sr-kicker{color:var(--muted); font-weight:800; letter-spacing:.16em; text-transform:uppercase; font-size:min(1.5vw,2.8vh)}
+  .sr-team{font-family:var(--display); font-weight:700; font-size:min(9vw,17vh); line-height:.95; color:var(--tc); margin:1.2vh 0 2.6vh; letter-spacing:.005em}
+  .sr-timer{display:inline-flex; align-items:center; gap:2vw; padding:1.6vh 2.2vw; border-radius:18px; background:rgba(255,255,255,.05); border:1px solid var(--line)}
+  .sr-state{font-size:min(1.2vw,2.2vh); font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); text-align:right; white-space:nowrap}
+  .sr-clock{font-family:var(--display); font-weight:700; font-size:min(8vw,14vh); line-height:.85; font-variant-numeric:tabular-nums; min-width:2.6em}
+  .sr-timer.delay .sr-clock{color:var(--muted)}
+  .sr-timer.low .sr-clock, .sr-timer.done .sr-clock{color:var(--danger)}
+  .sr-timer.done .sr-clock{animation:pulse 1s ease-in-out infinite}
+  .sr-btns{display:flex; flex-direction:column; gap:.6rem}
+  .sr-btns .sv-btn{font-size:1.05rem; padding:.7rem 1.3rem}
+  .sr-lens{margin-top:2.2vh; display:flex; justify-content:center; align-items:center; gap:.7rem; color:var(--muted); font-weight:600; font-size:.95rem}
+  .sr-foot{margin-top:2vh; color:var(--muted); font-size:min(1vw,1.9vh)}
+
+  @media (max-aspect-ratio: 1/1){
+    .spinDock{display:none}
+    .sv-body{grid-template-columns:1fr; overflow-y:auto}
+    .sv-wheel{--sz:min(88vw,50vh); justify-self:center}
+  }
 </style>
 </head>
 <body>
@@ -668,6 +774,13 @@
         <rect class="frame-top" x="14" y="316" width="172" height="5" rx="2.5"/>
       </svg>
     </div></div>
+    <div class="spinDock vhide" id="spinDock">
+        <div class="sd-wheel" id="sdWheel" title="Spin for table order (W opens the big wheel)"><i class="sd-ptr"></i><canvas id="sdCanvas"></canvas>
+          <button class="hub" id="sdHub" title="Spin, or stop the table timer"><span class="hc" id="sdHc">SPIN</span><span class="hs" id="sdHs"></span></button>
+        </div>
+        <button class="sd-open" id="sdOpen" title="Open the big wheel (W)" aria-label="Open the big wheel"><svg viewBox="0 0 16 16"><path d="M9.5 1.5h5v5h-1.6V4.2L9.6 7.5 8.5 6.4l3.3-3.3H9.5zM1.5 9.5h1.6v2.3l3.3-3.3 1.1 1.1-3.3 3.3h2.3v1.6h-5z"/></svg></button>
+        <div class="sd-tag" id="sdTag">Table spin</div>
+      </div>
     <div class="hgControls">
       <button id="startBtn" title="Start or pause (Space)"></button>
       <button id="resetBtn" title="Stop and reset the timer (R)"><svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="2"/></svg><span>Stop</span></button>
@@ -809,6 +922,7 @@
       <button id="moreBtn" aria-haspopup="true" aria-expanded="false" title="Mentor day, sync, new day, demo and settings">More <span class="caret">▾</span></button>
       <div class="more-menu" id="moreMenu" hidden>
         <div class="more-sec">Daily</div>
+        <button id="spinMenuBtn" class="vhide" title="Spin for table pick order, with its own short timer (W)">Table spin</button>
         <button id="newDayBtn" class="vhide" title="Clear all group check-offs and bonus banks for AM and PM, and reset the timer">New day</button>
         <div class="more-sec">Special days</div>
         <button id="mentorBtn" class="vhide" title="Show mentor pairings for Round 1, Round 2 and Open house">Mentor day</button>
@@ -913,6 +1027,48 @@
     <div class="settings-foot"><span class="sm-msg" id="smMsg"></span><button class="primary" id="smGo">Open room</button></div>
   </div>
 </div>
+<div class="spinView" id="spinView" hidden>
+  <div class="sv-head">
+    <h2>Table spin <span>·</span> <span id="svCls">AM</span> class</h2>
+    <span class="sv-hint">Click the wheel or press Space to spin · Esc or W to go back</span>
+    <button class="sv-btn primary" id="svClose">Back to timer</button>
+  </div>
+  <div class="sv-body">
+    <div class="sv-wheel" id="svWheel"><i class="sv-ptr"></i><canvas id="svCanvas"></canvas>
+      <button class="hub" id="svHub" title="Spin, or stop the table timer"><span class="hc" id="svHc">SPIN</span><span class="hs" id="svHs"></span></button>
+    </div>
+    <div class="sv-side">
+      <section class="sv-card"><h3>Table pick order <small id="svCount"></small></h3><ol class="sv-order" id="svOrder"></ol></section>
+      <section class="sv-card c2"><h3>On the wheel <small>Click a team to add or remove</small></h3><div class="sv-chips" id="svChips"></div></section>
+      <section class="sv-card c3 sv-timer" id="svTimer">
+        <div><div class="sv-tstate" id="svTState">Timer ready</div><div class="sv-tclock" id="svTClock">0:30</div></div>
+        <div></div>
+        <div class="sv-tbtns"><button class="sv-btn primary" id="svTGo">Start</button><button class="sv-btn" id="svTStop">Stop</button></div>
+        <div class="sv-tset">
+          <span class="lens" id="svLens"></span>
+          <label><input type="checkbox" id="svAuto"> Start 10 sec after each pick</label>
+          <label><input type="checkbox" id="svRemove"> Remove team after it picks</label>
+        </div>
+      </section>
+      <div class="sv-actions"><button class="sv-btn" id="svUndo">Undo last pick</button><button class="sv-btn" id="svReset">Reset picks</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="spinResult" id="spinResult">
+  <div class="sr-box" id="srBox">
+    <div class="sr-kicker" id="srKicker">Picks first</div>
+    <div class="sr-team" id="srTeam"></div>
+    <div class="sr-timer" id="srTimer">
+      <div class="sr-state" id="srState">Timer starts in</div>
+      <div class="sr-clock" id="srClock">0:10</div>
+      <div class="sr-btns"><button class="sv-btn primary" id="srGo">Start now</button><button class="sv-btn" id="srStop">No timer</button></div>
+    </div>
+    <div class="sr-lens">Timer length <span class="lens" id="srLens"></span></div>
+    <div class="sr-foot">Click outside this box or press Space to close. The timer keeps running on the small wheel.</div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <div class="demo-bar" id="demoBar" hidden>
   <span class="demo-tag">Demo</span>
@@ -1777,6 +1933,7 @@
   function renderBoard(){
     const board = $('board'), c = C(), gc = c.count;
     document.body.classList.toggle('nogroups', gc === 0);
+    renderSpinSoon();
     $('boardTitle').textContent = `${state.cls} groups`;
     if (!gc){ board.innerHTML = ''; return; }
     if (board.contains(document.activeElement)) return; // don't rebuild under someone renaming a group
@@ -1891,6 +2048,7 @@
     $('wallCls').textContent = state.cls + ' class';
     if (typeof renderMentor === 'function' && M.on) renderMentor();
     if (typeof renderNow === 'function') renderNow();
+    if (typeof renderSpinSoon === 'function') renderSpinSoon();
   }
 
   /* ================= bonus bank + slot machine ================= */
@@ -3094,6 +3252,362 @@
   $('smGo').addEventListener('click', goSync);
   ['smRoom', 'smPin'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); goSync(); } }));
 
+  /* ================= table spin ================= */
+  // A spin wheel for table pick order. Uses this class's group names and colors, keeps its own
+  // pick order per class, and has its own short timer that can start 10 seconds after each pick.
+  const SPIN_KEY = 'goalTimer.spin.v1';
+  const SPIN_DELAY = 10;
+  const LEN_CHOICES = [30, 60, 120];
+  const ORDS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
+  const spinSt = { len: 30, auto: true, remove: true, AM: null, PM: null };
+  try{
+    const o = JSON.parse(localStorage.getItem(SPIN_KEY) || 'null');
+    if (o && typeof o === 'object'){
+      if (Number(o.len) > 0) spinSt.len = Math.min(3600, Math.round(Number(o.len)));
+      if (typeof o.auto === 'boolean') spinSt.auto = o.auto;
+      if (typeof o.remove === 'boolean') spinSt.remove = o.remove;
+      ['AM', 'PM'].forEach(cl => {
+        const c = o[cl];
+        if (c && Array.isArray(c.pool) && Array.isArray(c.order)){
+          spinSt[cl] = { pool: c.pool.filter(Number.isInteger), order: c.order.filter(Number.isInteger), n: Math.max(0, Number(c.n) || 0) };
+        }
+      });
+    }
+  }catch(e){}
+  const saveSpin = () => { if (demo) return; try{ localStorage.setItem(SPIN_KEY, JSON.stringify(spinSt)); }catch(e){} };
+  // this class's wheel, kept in step with the number of groups
+  function SPN(cls = state.cls){
+    const n = state.classes[cls].count;
+    let s = spinSt[cls];
+    if (!s) s = spinSt[cls] = { pool: [...Array(n).keys()], order: [], n };
+    if (s.n !== n){
+      s.pool = s.pool.filter(g => g < n);
+      s.order = s.order.filter(g => g < n);
+      for (let g = s.n; g < n; g++) if (!s.pool.includes(g) && !s.order.includes(g)) s.pool.push(g);
+      s.pool.sort((a, b) => a - b);
+      s.n = n;
+    }
+    return s;
+  }
+  const swName = g => state.classes[state.cls].names[g] || fallbackName(g);
+  const swColor = g => GROUP_COLORS[g % GROUP_COLORS.length];
+  const swFmt = sec => { sec = Math.max(0, Math.ceil(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); };
+  function swParse(v){
+    v = String(v).trim();
+    const m = v.match(/^(\d+):(\d{1,2})$/);
+    if (m) return Math.min(3600, Math.max(5, +m[1] * 60 + +m[2]));
+    const n = parseFloat(v);
+    return Number.isFinite(n) && n > 0 ? Math.min(3600, Math.max(5, Math.round(n))) : null;
+  }
+
+  let swRot = 0, swBusy = false, swPending = null;
+  let swPhase = 'idle', swEnd = 0, swInt = null, swLast = null, swDoneT = null;
+  const swResultOpen = () => $('spinResult').classList.contains('show');
+
+  /* ---- wheel drawing ---- */
+  function swDraw(cv){
+    if (!cv.offsetParent) return;
+    const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+    if (!W || !H) return;
+    if (cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+    const x = cv.getContext('2d'), big = cv.id === 'svCanvas';
+    const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 2 * dpr;
+    x.clearRect(0, 0, W, H);
+    x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.fillStyle = '#23272e'; x.fill();
+    const list = SPN().pool, n = list.length;
+    if (n){
+      const seg = Math.PI * 2 / n;
+      const inner = big ? .27 : .41;               // labels stop short of the hub
+      const maxW = R * (.93 - inner - .04);
+      for (let k = 0; k < n; k++){
+        const g = list[k], a0 = swRot + k * seg;
+        x.beginPath(); x.moveTo(cx, cy); x.arc(cx, cy, R, a0, a0 + seg); x.closePath();
+        x.fillStyle = swColor(g); x.fill();
+        if (n > 1){ x.strokeStyle = '#0c0e11'; x.lineWidth = (big ? 4 : 2) * dpr; x.stroke(); }
+        x.save();
+        x.translate(cx, cy); x.rotate(a0 + seg / 2);
+        x.textAlign = 'right'; x.textBaseline = 'middle'; x.fillStyle = '#121417';
+        const label = swName(g);
+        const segH = n > 1 ? 2 * R * .72 * Math.sin(seg / 2) : R;
+        let size = Math.max(8 * dpr, Math.min(R * (big ? .13 : .17), segH * .55));
+        x.font = `700 ${size}px 'Barlow Condensed','Arial Narrow',sans-serif`;
+        while (x.measureText(label).width > maxW && size > 7 * dpr){
+          size -= dpr; x.font = `700 ${size}px 'Barlow Condensed','Arial Narrow',sans-serif`;
+        }
+        x.fillText(label, R * .93, 0);
+        x.restore();
+      }
+    }
+    x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2);
+    x.strokeStyle = 'rgba(255,255,255,.16)'; x.lineWidth = (big ? 6 : 3) * dpr; x.stroke();
+  }
+  const swDrawAll = () => { swDraw($('sdCanvas')); swDraw($('svCanvas')); };
+  function swAt(n){
+    const seg = Math.PI * 2 / n;
+    let a = (Math.PI * 1.5 - swRot) % (Math.PI * 2);
+    if (a < 0) a += Math.PI * 2;
+    return Math.floor(a / seg) % n;
+  }
+
+  /* ---- spinning ---- */
+  function swSpin(){
+    if (swBusy || swResultOpen()) return;
+    if (locked()) return lockedMsg();
+    const s = SPN(), n = s.pool.length;
+    if (!state.classes[state.cls].count){ toast('Turn on groups to use the wheel.'); return; }
+    if (!n){
+      if ($('spinView').hidden) openSpin();
+      toast('Every team is off the wheel. Click a team to add it back, or reset the picks.');
+      return;
+    }
+    unlockAudio();
+    swStopTimer();
+    swBusy = true; renderSpin();
+    const seg = Math.PI * 2 / n;
+    const winK = Math.floor(Math.random() * n);
+    const jitter = (Math.random() * .7 + .15) * seg;
+    const turns = 6 + Math.floor(Math.random() * 3);
+    const TAU = Math.PI * 2;
+    let target = Math.PI * 1.5 - (winK * seg + jitter);
+    target = swRot - (swRot % TAU) + ((target % TAU) + TAU) % TAU + turns * TAU;
+    if (target - swRot < turns * TAU) target += TAU;
+    const start = swRot, delta = target - start, dur = 5000 + Math.random() * 1200, t0 = performance.now();
+    let lastIdx = swAt(n);
+    (function frame(now){
+      const p = Math.min(1, (now - t0) / dur);
+      swRot = start + delta * (1 - Math.pow(1 - p, 4));
+      swDrawAll();
+      const idx = swAt(n);
+      if (idx !== lastIdx){ lastIdx = idx; play(t => tone(1500, t, .035, .09, 'triangle')); }
+      if (p < 1) requestAnimationFrame(frame);
+      else { swBusy = false; swFinish(s.pool[swAt(n)]); }
+    })(t0);
+  }
+  function swFinish(g){
+    const s = SPN();
+    s.order = s.order.filter(x => x !== g);
+    s.order.push(g);
+    swPending = g;
+    saveSpin();
+    play(n => [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, n + i * .09, .5, .2)));
+    confetti();
+    $('srKicker').textContent = `Picks ${ORDS[s.order.length - 1] || '#' + s.order.length}`;
+    $('srTeam').textContent = swName(g);
+    $('srBox').style.setProperty('--tc', swColor(g));
+    $('spinResult').classList.add('show');
+    if (spinSt.auto) swStartDelay();
+    renderSpin();
+  }
+  function swCloseResult(){
+    if (!swResultOpen()) return;
+    $('spinResult').classList.remove('show');
+    if (swPending != null && spinSt.remove){ const s = SPN(); s.pool = s.pool.filter(x => x !== swPending); }
+    swPending = null;
+    saveSpin(); renderSpin();
+  }
+
+  /* ---- the table timer ---- */
+  function swRun(fn){ clearInterval(swInt); clearTimeout(swDoneT); swLast = null; fn(); swInt = setInterval(swTick, 100); swTick(); }
+  function swStartDelay(){ swRun(() => { swPhase = 'delay'; swEnd = performance.now() + SPIN_DELAY * 1000; }); }
+  function swStartNow(){
+    if (locked()) return lockedMsg();
+    unlockAudio();
+    swRun(() => { swPhase = 'run'; swEnd = performance.now() + spinSt.len * 1000; });
+    play(t => { tone(880, t, .15, .2); tone(1320, t + .14, .3, .2); });
+  }
+  function swStopTimer(){ clearInterval(swInt); clearTimeout(swDoneT); swInt = null; swPhase = 'idle'; swRenderTimer(0); }
+  function swTick(){
+    const now = performance.now();
+    let left = (swEnd - now) / 1000;
+    if (swPhase === 'delay' && left <= 0){ swStartNow(); return; }
+    if (swPhase === 'run' && left <= 0){
+      swPhase = 'done'; clearInterval(swInt); swInt = null; left = 0;
+      play(t => { tone(196, t, .7, .22, 'sawtooth'); tone(147, t + .05, .8, .18, 'sawtooth'); });
+      swDoneT = setTimeout(() => { if (swPhase === 'done') swStopTimer(); }, 15000);
+    }
+    const s = Math.ceil(left);
+    if (s !== swLast){
+      if (swLast !== null){
+        if (swPhase === 'delay' && s <= 3 && s > 0) play(t => tone(660, t, .1, .15, 'triangle'));
+        if (swPhase === 'run' && s <= 5 && s > 0) play(t => tone(880, t, .1, .17, 'triangle'));
+      }
+      swLast = s;
+    }
+    swRenderTimer(left);
+  }
+  function swRenderTimer(left){
+    const ph = swPhase, low = ph === 'run' && left <= 5;
+    const cls = ph + (low ? ' low' : '');
+    const clock = ph === 'idle' ? swFmt(spinSt.len) : swFmt(left);
+    const lbl = { idle: 'Timer ready', delay: 'Timer starts in', run: 'Time left', done: "Time's up" }[ph];
+    $('svTimer').className = 'sv-card c3 sv-timer ' + cls;
+    $('svTState').textContent = lbl; $('svTClock').textContent = clock;
+    $('svTGo').textContent = ph === 'run' ? 'Restart' : ph === 'delay' ? 'Start now' : 'Start';
+    $('srTimer').className = 'sr-timer ' + cls;
+    $('srState').textContent = spinSt.auto || ph !== 'idle' ? lbl : 'Timer off';
+    $('srClock').textContent = clock;
+    $('srGo').textContent = ph === 'run' ? 'Restart' : ph === 'done' ? 'Run again' : ph === 'delay' ? 'Start now' : 'Start timer';
+    $('srStop').hidden = ph === 'idle';
+    const s = SPN(), off = !s.pool.length || !state.classes[state.cls].count;
+    ['sd', 'sv'].forEach(p => {
+      const hub = $(p + 'Hub');
+      hub.className = 'hub' + (ph === 'idle' ? (off && !swBusy ? ' off' : '') : ' ' + cls);
+      $(p + 'Hc').textContent = ph === 'idle' ? (swBusy ? '' : off ? 'DONE' : 'SPIN') : clock;
+      $(p + 'Hs').textContent = ph === 'delay' ? 'starts in' : ph === 'done' ? "time's up" : '';
+      $(p + 'Hs').hidden = !$(p + 'Hs').textContent;
+    });
+  }
+  function swSetLen(v){
+    if (!v) return;
+    spinSt.len = v; saveSpin();
+    if (swPhase === 'run') swStartNow();
+    renderLens(); swRenderTimer(0);
+    if (swPhase !== 'idle') swTick();
+  }
+  function renderLens(){
+    ['svLens', 'srLens'].forEach(id => {
+      const box = $(id);
+      box.innerHTML = '';
+      LEN_CHOICES.forEach(v => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.textContent = swFmt(v);
+        b.classList.toggle('on', spinSt.len === v);
+        b.addEventListener('click', e => { e.stopPropagation(); swSetLen(v); b.blur(); });
+        box.appendChild(b);
+      });
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.inputMode = 'numeric'; inp.placeholder = 'other';
+      inp.title = 'Seconds, or minutes:seconds like 1:30';
+      inp.setAttribute('aria-label', 'Timer length');
+      if (!LEN_CHOICES.includes(spinSt.len)){ inp.value = swFmt(spinSt.len); inp.classList.add('on'); inp.style.borderColor = 'var(--sand)'; }
+      const apply = () => { const v = swParse(inp.value); if (v) swSetLen(v); else renderLens(); };
+      inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter'){ e.preventDefault(); apply(); } if (e.key === 'Escape'){ e.preventDefault(); renderLens(); } });
+      inp.addEventListener('change', apply);
+      inp.addEventListener('click', e => e.stopPropagation());
+      box.appendChild(inp);
+    });
+  }
+
+  /* ---- big view lists ---- */
+  function renderSpin(){
+    const s = SPN(), cls = state.cls;
+    $('svCls').textContent = cls;
+    const extra = s.pool.filter(g => !s.order.includes(g)).length;
+    const total = s.order.length + extra;
+    $('sdTag').textContent = s.order.length ? `${s.order.length} of ${total} picked` : 'Table spin';
+    $('svCount').textContent = `${s.order.length} of ${total} picked`;
+    const ol = $('svOrder');
+    ol.style.setProperty('--rows', Math.max(1, Math.ceil(total / 2)));
+    ol.innerHTML = '';
+    for (let p = 0; p < total; p++){
+      const li = document.createElement('li');
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = p + 1;
+      const t = document.createElement('span'); t.className = 't';
+      if (p < s.order.length){
+        const g = s.order[p];
+        n.style.background = swColor(g); t.textContent = swName(g);
+        if (p === s.order.length - 1 && swResultOpen()) li.classList.add('pop');
+      } else { li.className = 'wait'; t.textContent = 'Waiting'; }
+      li.append(n, t); ol.appendChild(li);
+    }
+    const chips = $('svChips');
+    chips.innerHTML = '';
+    for (let g = 0; g < state.classes[cls].count; g++){
+      const on = s.pool.includes(g) && !(g === swPending && spinSt.remove && swResultOpen());
+      const pos = s.order.indexOf(g);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sv-chip' + (on ? '' : ' off');
+      b.style.background = swColor(g); b.style.borderColor = swColor(g);
+      b.title = on ? 'Take off the wheel' : 'Put back on the wheel';
+      if (!on && pos > -1){ const pk = document.createElement('span'); pk.className = 'pk'; pk.textContent = '#' + (pos + 1); b.appendChild(pk); }
+      const x = document.createElement('span'); x.className = 'x'; x.textContent = swName(g); b.appendChild(x);
+      b.addEventListener('click', () => { swToggle(g); b.blur(); });
+      chips.appendChild(b);
+    }
+    $('svAuto').checked = spinSt.auto;
+    $('svRemove').checked = spinSt.remove;
+    $('svUndo').disabled = !s.order.length;
+    swRenderTimer(swPhase === 'idle' ? 0 : (swEnd - performance.now()) / 1000);
+    swDrawAll();
+  }
+  let spinRenderPending = false;
+  function renderSpinSoon(){
+    if (spinRenderPending) return;
+    spinRenderPending = true;
+    requestAnimationFrame(() => { spinRenderPending = false; renderSpin(); });
+  }
+  function swToggle(g){
+    if (swBusy || swResultOpen() || locked()) return;
+    const s = SPN();
+    if (s.pool.includes(g)) s.pool = s.pool.filter(x => x !== g);
+    else { s.pool.push(g); s.pool.sort((a, b) => a - b); s.order = s.order.filter(x => x !== g); }
+    saveSpin(); renderSpin();
+  }
+  function swUndo(){
+    if (swBusy || swResultOpen() || locked()) return;
+    const s = SPN(), g = s.order.pop();
+    if (g == null) return;
+    if (!s.pool.includes(g)){ s.pool.push(g); s.pool.sort((a, b) => a - b); }
+    swStopTimer(); saveSpin(); renderSpin();
+  }
+  function swReset(){
+    if (swBusy || swResultOpen() || locked()) return;
+    const s = SPN(), snap = { pool: [...s.pool], order: [...s.order] };
+    s.pool = [...Array(state.classes[state.cls].count).keys()]; s.order = [];
+    swStopTimer(); saveSpin(); renderSpin();
+    toast('Picks reset. Every team is back on the wheel.', () => { Object.assign(SPN(), snap); saveSpin(); renderSpin(); });
+  }
+  function openSpin(){
+    if (locked()) return lockedMsg();
+    if (!state.classes[state.cls].count){ toast('Turn on groups to use the wheel.'); return; }
+    $('spinView').hidden = false; showControls();
+    requestAnimationFrame(renderSpin);
+  }
+  function closeSpin(){
+    if (swResultOpen()) swCloseResult();
+    $('spinView').hidden = true;
+    requestAnimationFrame(renderSpin);
+  }
+
+  /* ---- wiring ---- */
+  const hubClick = e => { e.stopPropagation(); if (swPhase !== 'idle') swStopTimer(); else swSpin(); };
+  $('sdWheel').addEventListener('click', swSpin);
+  $('svWheel').addEventListener('click', swSpin);
+  $('sdHub').addEventListener('click', hubClick);
+  $('svHub').addEventListener('click', hubClick);
+  $('sdOpen').addEventListener('click', e => { e.stopPropagation(); openSpin(); });
+  $('spinMenuBtn').addEventListener('click', () => { setMore(false); openSpin(); });
+  $('svClose').addEventListener('click', closeSpin);
+  $('svTGo').addEventListener('click', swStartNow);
+  $('svTStop').addEventListener('click', swStopTimer);
+  $('srGo').addEventListener('click', e => { e.stopPropagation(); swStartNow(); });
+  $('srStop').addEventListener('click', e => { e.stopPropagation(); swStopTimer(); });
+  $('svAuto').addEventListener('change', e => { spinSt.auto = e.target.checked; saveSpin(); renderSpin(); });
+  $('svRemove').addEventListener('change', e => { spinSt.remove = e.target.checked; saveSpin(); renderSpin(); });
+  $('svUndo').addEventListener('click', swUndo);
+  $('svReset').addEventListener('click', swReset);
+  $('spinResult').addEventListener('click', e => { if (!$('srBox').contains(e.target)) swCloseResult(); });
+  // runs before the timer's own key handler so Space spins here instead of starting the timer
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const res = swResultOpen(), view = !$('spinView').hidden;
+    const k = e.key.toLowerCase();
+    if (!res && !view){
+      if (k !== 'w' || editing() || slot || document.querySelector('.settings:not([hidden])') || M.on || mode === 'break') return;
+      e.preventDefault(); e.stopImmediatePropagation(); openSpin(); return;
+    }
+    if (editing()) return;
+    e.stopImmediatePropagation();
+    if (k === ' ' || k === 'enter'){ e.preventDefault(); if (res) swCloseResult(); else swSpin(); }
+    else if (k === 'escape'){ e.preventDefault(); if (res) swCloseResult(); else closeSpin(); }
+    else if (k === 'w' && !res){ e.preventDefault(); closeSpin(); }
+    else if (k === 'f'){ e.preventDefault(); toggleFs(); }
+  }, true);
+  window.addEventListener('resize', () => requestAnimationFrame(swDrawAll));
+  renderLens();
+
   /* ================= boot ================= */
   load();
   syncSoundBtn();
@@ -3104,9 +3618,10 @@
   prevAllDone = document.body.classList.contains('alldone');
   if (!SYNC && saved && saved.breakTarget > wallNow() + 5000) startBreak(saved.breakTarget, { resume: true, bonus: saved.breakBonus || 0 });
   renderMentor();
+  renderSpin();
   if (SYNC) initSync();
   requestAnimationFrame(loop);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitAll(); swDrawAll(); });
 })();
 </script>
 </body>
