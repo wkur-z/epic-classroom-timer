@@ -3367,12 +3367,12 @@
     const seg = Math.PI * 2 / n;
     const winK = Math.floor(Math.random() * n);
     const jitter = (Math.random() * .7 + .15) * seg;
-    const turns = 6 + Math.floor(Math.random() * 3);
+    const turns = 4 + Math.floor(Math.random() * 2);
     const TAU = Math.PI * 2;
     let target = Math.PI * 1.5 - (winK * seg + jitter);
     target = swRot - (swRot % TAU) + ((target % TAU) + TAU) % TAU + turns * TAU;
     if (target - swRot < turns * TAU) target += TAU;
-    const start = swRot, delta = target - start, dur = 5000 + Math.random() * 1200, t0 = performance.now();
+    const start = swRot, delta = target - start, dur = 2600 + Math.random() * 600, t0 = performance.now();
     let lastIdx = swAt(n);
     (function frame(now){
       const p = Math.min(1, (now - t0) / dur);
